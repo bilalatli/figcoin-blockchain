@@ -36,11 +36,7 @@ const initHttpServer = (myHttpPort: number) => {
     });
 
     app.get('/v2/version', rateLimiter, (req, res) => {
-        res.status(200).send("Hello From FigChain 0.002.2")
-    });
-
-    app.get('/v2/blocks', rateLimiter, (req, res) => {
-        res.status(200).send(getBlockchain());
+        res.status(200).send("Hello From FigChain 0.002.5")
     });
 
     app.get('/v2/lastBlock', rateLimiter, (req, res) => {

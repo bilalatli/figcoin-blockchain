@@ -76,7 +76,7 @@ const initMessageHandler = (ws: WebSocket) => {
                 case MessageType.RESPONSE_BLOCKCHAIN:
                     const receivedBlocks: Block[] = JSONToObject<Block[]>(message.data);
                     if (receivedBlocks === null) {
-                        console.log('invalid blocks received: %s', JSON.stringify(message.data));
+                        console.log('invalid blocks received do nothing.');
                         break;
                     }
                     handleBlockchainResponse(receivedBlocks);
@@ -87,13 +87,12 @@ const initMessageHandler = (ws: WebSocket) => {
                 case MessageType.RESPONSE_TRANSACTION_POOL:
                     const receivedTransactions: Transaction[] = JSONToObject<Transaction[]>(message.data);
                     if (receivedTransactions === null) {
-                        console.log('invalid transaction received: %s', JSON.stringify(message.data));
+                        console.log('invalid transaction received do nothing.');
                         break;
                     }
                     receivedTransactions.forEach((transaction: Transaction) => {
                         try {
                             handleReceivedTransaction(transaction);
-
                             broadCastTransactionPool();
                         } catch (e) {
                             console.log(e.message);

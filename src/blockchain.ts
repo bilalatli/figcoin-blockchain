@@ -384,7 +384,7 @@ const addBlockToChain = (newBlock: Block): boolean => {
 };
 
 const writeBlocksToFile = (newBlock: Block): boolean => {
-    const time = moment(new Date()).format("DDMMYYYY");
+    const time = moment(newBlock.timestamp * 1000).format("DDMMYYYY");
     const path = `${blockchainLocation}/${time}`
     if (!existsSync(path)) {
         mkdirSync(path);
