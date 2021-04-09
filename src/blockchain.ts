@@ -127,6 +127,7 @@ const getBlockchainChunk = (index: string): Block[] => {
 };
 
 const readBlockchainAt = (index: string): Block[] => {
+  console.log("index", index)
   const blockPath: string = path.join(blockchainLocation, index);
   if (!fs.existsSync(blockPath)) {
     console.error(`Block Path Not Found: ${blockPath}`);
@@ -134,7 +135,6 @@ const readBlockchainAt = (index: string): Block[] => {
   }
 
   const blocks: number[] = FSUtil.getFiles(blockPath).map((bn) => +bn).sort((a, b) => a > b ? 1 : -1);
-
   const blockResponse: Block[] = [];
   blocks.forEach((block) => {
     let blockData: string | Block = fs.readFileSync(path.join(blockPath, block.toString())).toString('utf-8');
@@ -148,7 +148,6 @@ const readBlockchainAt = (index: string): Block[] => {
 
     blockResponse.push(blockData as Block);
   });
-
   return blockResponse;
 }
 
@@ -164,9 +163,10 @@ const getLastNBlockchainChunk = (n: number): Block[] => {
   const orderedGroups = bgsKeys.sort((a, b) => a > b ? 1 : -1);
 
   const blocks = [];
-  const filteredGroups = orderedGroups.slice(orderedGroups.length - 1 - n);
+  const filteredGroups = orderedGroups.slice(orderedGroups.length - n);
 
   for (let i = 0; i < filteredGroups.length; i++) {
+
     const fg = filteredGroups[i];
     const blks: Block[] = readBlockchainAt(fg);
     blocks.push(...blks);
@@ -246,6 +246,7 @@ const getDifficulty = (): number => {
 
 const getAdjustedDifficulty = (latestBlock: Block) => {
   const bchain = getLastNBlockchainChunk(2);
+  console.log(bchain, "xxx")
 
   const prevAdjustmentBlock: Block = bchain[bchain.length - DIFFICULTY_ADJUSTMENT_INTERVAL];
 
