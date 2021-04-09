@@ -20,10 +20,10 @@ import {
   syncChain
 } from './blockchain';
 
-import {connectToPeers, getSockets, initP2PServer} from './p2p';
-import {UnspentTxOut} from './transaction';
-import {getTransactionPool} from './transactionPool';
-import {getNewFreeWallet, getPublicFromNodeWallet, initMasterWallet} from './wallet';
+import { connectToPeers, getSockets, initP2PServer } from './p2p';
+import { UnspentTxOut } from './transaction';
+import { getTransactionPool } from './transactionPool';
+import { getNewFreeWallet, getPublicFromNodeWallet, initMasterWallet } from './wallet';
 
 const rateLimit: any = require('express-rate-limit');
 
@@ -92,26 +92,26 @@ const initHttpServer = (myHttpPort: number) => {
   app.get('/v2/address/:address', rateLimiter, (req, res) => {
     const unspentTxOuts: UnspentTxOut[] =
       _.filter(getNodeUnspentTxOuts(), (uTxO) => uTxO.address === req.params.address);
-    res.status(200).send({'unspentTxOuts': unspentTxOuts});
+    res.status(200).send({ 'unspentTxOuts': unspentTxOuts });
   });
 
   app.get('/v2/balance', rateLimiter, (req, res) => {
     const balance: number = getNodeBalance();
-    res.status(200).send({'balance': balance});
+    res.status(200).send({ 'balance': balance });
   });
 
   app.get('/v2/balance/:address', rateLimiter, (req, res) => {
     const balance: number = getFreeWalletBalance(req.params.address);
-    res.status(200).send({'balance': balance});
+    res.status(200).send({ 'balance': balance });
   });
 
   app.get('/v2/address', rateLimiter, (req, res) => {
     const address: string = getPublicFromNodeWallet();
-    res.status(200).send({'address': address});
+    res.status(200).send({ 'address': address });
   });
 
   app.get('/v2/freeWallet', rateLimiter, (req, res) => {
-    const returnObject = {success: true, data: getNewFreeWallet()};
+    const returnObject = { success: true, data: getNewFreeWallet() };
     res.status(200).send(returnObject);
   });
 
@@ -126,7 +126,7 @@ const initHttpServer = (myHttpPort: number) => {
   });
 
   app.post('/v2/figTransaction', rateLimiter, (req, res) => {
-    const {address, amount, key: nodeSecret} = req.body;
+    const { address, amount, key: nodeSecret } = req.body;
 
     try {
       const resp = generateNextBlockWithTransaction(address, amount, nodeSecret);
@@ -144,7 +144,7 @@ const initHttpServer = (myHttpPort: number) => {
   app.post('/v2/sendTransactionToPool', rateLimiter, (req, res) => {
 
     try {
-      const {address, amount, key: nodeSecret} = req.body;
+      const { address, amount, key: nodeSecret } = req.body;
 
       if (address === undefined || amount === undefined) {
         throw Error('invalid address or amount');
@@ -159,7 +159,7 @@ const initHttpServer = (myHttpPort: number) => {
 
   app.post('/v2/sendFromWalletTransactionToPool', rateLimiter, (req, res) => {
     try {
-      const {publicKey, privateKey, toPublicKey, amount} = req.body;
+      const { publicKey, privateKey, toPublicKey, amount } = req.body;
 
       if (publicKey === undefined || privateKey === undefined || amount === undefined || toPublicKey === undefined) {
         throw Error('invalid keys or amount');
@@ -170,15 +170,15 @@ const initHttpServer = (myHttpPort: number) => {
 
       if (newBlock === null || newBlock === undefined) {
         if (resp) {
-          let returnObject = {success: true, msg: 'New Transaction Send To Pool', data: resp};
+          let returnObject = { success: true, msg: 'New Transaction Send To Pool', data: resp };
           res.status(200).send(returnObject);
         } else {
-          let returnObject = {success: false, msg: 'Error when save Transaction.'};
+          let returnObject = { success: false, msg: 'Error when save Transaction.' };
           res.status(400).send(returnObject);
         }
 
       } else {
-        let returnObject = {success: true, msg: 'New Block Generated', data: newBlock};
+        let returnObject = { success: true, msg: 'New Block Generated', data: newBlock };
         res.status(200).send(returnObject);
       }
 

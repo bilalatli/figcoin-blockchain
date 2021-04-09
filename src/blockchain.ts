@@ -36,7 +36,7 @@ const nodesecretlocation = process.env.NODE_SECRET_LOCATION || 'node/wallet/node
 // in seconds
 const BLOCK_GENERATION_INTERVAL: number = 8;
 // in blocks
-const DIFFICULTY_ADJUSTMENT_INTERVAL: number = 2;
+const DIFFICULTY_ADJUSTMENT_INTERVAL: number = 10;
 // min figing
 const MIN_COIN_FOR_FIGING: number = 100000;
 
@@ -118,15 +118,15 @@ const searchBlockchain = (condition, onlyFirstOccurence = false): Block[] => {
 const getBlockchainChunk = (index: string): Block[] => {
   const bgs = blockGroups();
   if (!bgs[index]) {
-    console.error('Block Group Not Found: ' + index);
-    return null;
+    console.error('Block Group Not Found!');
     // process.exit(1);
+    return null;
   }
 
   return readBlockchainAt(index);
 };
 
-function readBlockchainAt(index: string): Block[] {
+const readBlockchainAt = (index: string): Block[] => {
   const blockPath: string = path.join(blockchainLocation, index);
   if (!fs.existsSync(blockPath)) {
     console.error(`Block Path Not Found: ${blockPath}`);
@@ -457,27 +457,100 @@ const isValidChain = (blockchainToValidate: Block[]): UnspentTxOut[] => {
     return JSON.stringify(block) === JSON.stringify(genesisBlock);
   };
 
-  if (!isValidGenesis(blockchainToValidate[0])) {
+  if (blockchainToValidate[0].index === 0 && !isValidGenesis(blockchainToValidate[0])) {
     return null;
   }
   /*
   Tüm blockları valid mi kontrol ediyoruz.
    */
-  let aUnspentTxOuts: UnspentTxOut[] = [];
 
-  for (let i = 0; i < blockchainToValidate.length; i++) {
-    const currentBlock: Block = blockchainToValidate[i];
-    if (i !== 0 && !isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i - 1])) {
+  const txOuts = { aUnspentTxOuts: [] };
+  // let aUnspentTxOuts: UnspentTxOut[] = [];
+
+  const bgs = blockGroups();
+  const bgKeys = Object.keys(bgs).sort((a, b) => a > b ? 1 : -1);
+  for (let i = 0; i < bgKeys.length; i++) {
+    const blockGroup = bgKeys[i];
+    const blocks: Block[] = getBlockchainChunk(blockGroup);
+    if (!blocks) {
       return null;
     }
 
-    aUnspentTxOuts = processTransactions(currentBlock.data, aUnspentTxOuts, currentBlock.index);
-    if (aUnspentTxOuts === null) {
+    const previousBlockGroup = bgKeys[i - 1];
+    let previousChunkBlocks: Block[];
+    if (i !== 0) {
+      previousChunkBlocks = getBlockchainChunk(previousBlockGroup);
+      if (!previousChunkBlocks) {
+        return null;
+      }
+    }
+
+    const isValid = isValidChunk(txOuts, blocks, previousChunkBlocks);
+    if (null === isValid) {
       console.log('invalid transactions in blockchain');
       return null;
     }
   }
-  return aUnspentTxOuts;
+
+  return txOuts.aUnspentTxOuts;
+
+  /*for (let i = 0; i < blockchainToValidate.length; i++) {
+    const currentBlock: Block = blockchainToValidate[i];
+
+    if (currentBlock.index !== 0 && i !== 0 && !isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i - 1])) {
+      return null;
+    }
+
+    if (i === 0) {
+      const block = blockchainToValidate[i];
+      const previousBgIndex = (Math.floor(block.index / BLOCKCHAIN_CHUNK_SIZE)) * BLOCKCHAIN_CHUNK_SIZE;
+      const previousChunkBlocks = getBlockchainChunk(previousBgIndex.toString());
+      const previousBlock = previousChunkBlocks[previousChunkBlocks.length - 1];
+      if (!isValidNewBlock(block, previousBlock)) {
+        return null;
+      }
+    }
+
+    txOuts.aUnspentTxOuts = processTransactions(currentBlock.data, txOuts.aUnspentTxOuts, currentBlock.index);
+    if (txOuts.aUnspentTxOuts === null) {
+      console.log('invalid transactions in blockchain');
+      return null;
+    }
+  }*/
+
+  return txOuts.aUnspentTxOuts;
+};
+
+const isValidChunk = (txOuts, currentChunk: Block[], previousChunk?: Block[]) => {
+  for (let i = 0; i < currentChunk.length; i++) {
+    const currentBlock: Block = currentChunk[i];
+
+    if (currentBlock.index !== 0 && i !== 0 && !isValidNewBlock(currentChunk[i], currentChunk[i - 1])) {
+      return null;
+    }
+
+    if (i === 0 && currentBlock.index !== 0) {
+      const block = currentChunk[i];
+      // const previousBgIndex = (Math.floor(block.index / BLOCKCHAIN_CHUNK_SIZE)) * BLOCKCHAIN_CHUNK_SIZE;
+      // const previousChunkBlocks = getBlockchainChunk(previousBgIndex.toString());
+
+      if (previousChunk) {
+        const previousChunkBlocks = previousChunk;
+        const previousBlock = previousChunkBlocks[previousChunkBlocks.length - 1];
+        if (!isValidNewBlock(block, previousBlock)) {
+          return null;
+        }
+      }
+    }
+
+    txOuts.aUnspentTxOuts = processTransactions(currentBlock.data, txOuts.aUnspentTxOuts, currentBlock.index);
+    if (txOuts.aUnspentTxOuts === null) {
+      console.log('invalid transactions in blockchain');
+      return null;
+    }
+  }
+
+  return txOuts.aUnspentTxOuts;
 };
 
 const addBlockToChain = (newBlock: Block): boolean => {
@@ -534,6 +607,7 @@ const replaceChain = (newBlocks: Block[]) => {
     updateTransactionPool(unspentTxOuts);
     broadcastLatest();
     replaceBlockhainToFileSystem(newBlocks);
+    setLatestBlock(newBlocks[newBlocks.length - 1]);
   } else {
     console.log('Received blockchain invalid');
   }
@@ -643,7 +717,6 @@ const handleReceivedTransaction = (transaction: Transaction) => {
 
 export {
   Block,
-  BLOCKCHAIN_CHUNK_SIZE,
   getBlockchainWithOffset,
   getNodeUnspentTxOuts,
   sendTransactionToPool,
@@ -667,5 +740,6 @@ export {
   getLastNBlockchainChunk,
   setLatestBlock,
   initGenesis,
-  syncChain
+  syncChain,
+  BLOCKCHAIN_CHUNK_SIZE
 };

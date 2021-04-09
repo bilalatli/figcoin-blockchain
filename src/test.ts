@@ -1,3 +1,4 @@
+/*
 const BLOCKCHAIN_CHUNK_SIZE = 1000;
 
 const getBlockGroupIndex = (blockIndex: number) => {
@@ -19,3 +20,4 @@ function test(offset = 75, page = 10) {
 }
 
 test();
+*/

@@ -216,7 +216,7 @@ const getFigBaseTransaction = (address: string, blockIndex: number): Transaction
 };
 
 const signTxIn = (transaction: Transaction, txInIndex: number,
-                  privateKey: string, aUnspentTxOuts: UnspentTxOut[]): string => {
+  privateKey: string, aUnspentTxOuts: UnspentTxOut[]): string => {
   const txIn: TxIn = transaction.txIns[txInIndex];
 
   const dataToSign = transaction.id;

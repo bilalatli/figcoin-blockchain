@@ -206,12 +206,12 @@ const initErrorHandler = (ws: WebSocket) => {
 const handleBlockchainResponse = (receivedBlocks: Block[]) => {
   if (receivedBlocks.length === 0) {
     console.log('received block chain size of 0');
-    return;
+    return false;
   }
   const latestBlockReceived: Block = receivedBlocks[receivedBlocks.length - 1];
   if (!isValidBlockStructure(latestBlockReceived)) {
     console.log('block structuture not valid: ', latestBlockReceived);
-    return;
+    return false;
   }
   const latestBlockHeld: Block = getLatestBlock();
   if (latestBlockReceived.index > latestBlockHeld.index) {
@@ -231,6 +231,8 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
   } else {
     console.log('received blockchain is not longer than received blockchain. Do nothing');
   }
+
+  return true;
 };
 
 const validateChunkBlocks = (receivedBlocks: Block[]) => {
@@ -252,6 +254,10 @@ const validateChunkBlocks = (receivedBlocks: Block[]) => {
       // Get Previous Chunk's Latest Block
       const previousBgIndex = (Math.floor(block.index / BLOCKCHAIN_CHUNK_SIZE)) * BLOCKCHAIN_CHUNK_SIZE;
       const previousChunkBlocks = getBlockchainChunk(previousBgIndex.toString());
+      if (!previousChunkBlocks) {
+        return false;
+      }
+
       previousBlock = previousChunkBlocks[previousChunkBlocks.length - 1];
     } else {
       previousBlock = receivedBlocks[i - 1];

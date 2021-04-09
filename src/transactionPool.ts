@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Transaction, TxIn, UnspentTxOut, validateTransaction} from './transaction';
+import { Transaction, TxIn, UnspentTxOut, validateTransaction } from './transaction';
 
 let transactionPool: Transaction[] = [];
 
@@ -68,4 +68,4 @@ const isValidTxForPool = (tx: Transaction, aTtransactionPool: Transaction[]): bo
   return true;
 };
 
-export {addToTransactionPool, getTransactionPool, updateTransactionPool};
+export { addToTransactionPool, getTransactionPool, updateTransactionPool };
