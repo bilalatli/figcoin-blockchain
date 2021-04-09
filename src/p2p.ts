@@ -85,6 +85,7 @@ const initMessageHandler = (ws: WebSocket) => {
       }
       console.log('Received message: %s', JSON.stringify(message));
       switch (message.type) {
+
         case MessageType.QUERY_LATEST:
           write(ws, responseLatestMsg());
           break;
@@ -177,7 +178,7 @@ const broadcast = (message: Message): void => sockets.forEach((socket) => write(
 
 const queryChainLengthMsg = (): Message => ({ 'type': MessageType.QUERY_LATEST, 'data': null });
 
-const queryAllMsg = (): Message => ({ 'type': MessageType.QUERY_ALL, 'data': null });
+const queryAllMsg = (): Message => ({ 'type': MessageType.QUERY_BLOCKCHAIN_CHUNK, 'data': null });
 
 const responseLatestMsg = (): Message => ({
   'type': MessageType.RESPONSE_BLOCKCHAIN,
